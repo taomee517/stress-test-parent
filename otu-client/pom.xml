@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>stress-test-parent</artifactId>
+        <groupId>com.fzk</groupId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>otu-client</artifactId>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <log4j2-version>2.9.1</log4j2-version>
+        <slf4j-version>1.7.28</slf4j-version>
+        <netty-version>4.1.32.Final</netty-version>
+        <lombok-version>1.18.10</lombok-version>
+        <poi-version>3.9</poi-version>
+        <commons-lang3-version>3.8.1</commons-lang3-version>
+        <blacktea-common-version>2.4.5</blacktea-common-version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.fzk</groupId>
+            <artifactId>vehicle-monitor</artifactId>
+            <version>1.0.0</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!--        <dependency>-->
+        <!--            <groupId>com.fzk</groupId>-->
+        <!--            <artifactId>stress-common-util</artifactId>-->
+        <!--            <version>1.0.0</version>-->
+        <!--            <scope>compile</scope>-->
+        <!--        </dependency>-->
+    </dependencies>
+<!--    <distributionManagement>-->
+<!--        <repository>-->
+<!--            <id>my-lib-repo</id>-->
+<!--            <url>http://cqfuzik.ticp.net:8083/nexus/content/repositories/releases</url>-->
+<!--        </repository>-->
+<!--    </distributionManagement>-->
+</project>

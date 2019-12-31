@@ -1,0 +1,4 @@
+# Project exclude paths
+/otu-client/target/
+/stress-common-util/target/
+/vehicle-monitor/target/

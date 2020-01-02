@@ -1,23 +1,28 @@
 package com.fzk.vehicle.monitor.entity;
 
-import com.alibaba.fastjson.JSON;
+import com.fzk.stress.cache.ChannelCache;
+import com.fzk.stress.entity.RedisService;
 import com.fzk.stress.entity.Vehicle;
-import com.fzk.stress.util.DateTimeUtil;
-import com.fzk.stress.util.JedisBuilder;
-import com.fzk.stress.util.ThreadPoolUtil;
+import com.fzk.stress.util.*;
+import io.netty.channel.Channel;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import redis.clients.jedis.Jedis;
 
 import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static com.fzk.stress.cache.TopicCenter.CAR_STATUS_PREFIX;
+import static com.fzk.stress.cache.TopicCenter.DELAY_MESSAGE_PREFIX;
+
 @Data
 @Slf4j
 public class Monitor {
     private List<String> imeis;
     private static volatile Map<String,Boolean> onMap = new HashMap<>(16);
+    private static volatile Map<String,Integer> indexMap = new HashMap<>(16);
     private static ScheduledThreadPoolExecutor scheduledPool = ThreadPoolUtil.schedule;
 
     public Monitor(List<String> imeis) {
@@ -47,16 +52,16 @@ public class Monitor {
 
     private void handleParkingVehicle(Vehicle vehicle){
         String imei = vehicle.getBindingDeviceImei();
-        Boolean onSignal = onMap.get(imei);
-        //没有存入，就表示非ON状态
-        if(Objects.isNull(onSignal)){
-            scheduledPool.scheduleAtFixedRate(new Runnable() {
-                @Override
-                public void run() {
+        scheduledPool.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                Boolean onSignal = onMap.get(imei);
+                //没有存入，就表示非ON状态
+                if(Objects.isNull(onSignal)){
                     publishStatus(vehicle);
                 }
-            },5, 150,TimeUnit.SECONDS);
-        }
+            }
+        },5, 30,TimeUnit.SECONDS);
     }
 
     private void driveTheCarInFuture(Vehicle vehicle,int start, int end){
@@ -66,7 +71,7 @@ public class Monitor {
             public void run() {
                 //车辆变为ON
                 String imei = vehicle.getBindingDeviceImei();
-                log.info("车辆启动，imei = {}, hexTime = {}",imei);
+                log.info("车辆启动，imei = {}",imei);
                 onMap.put(imei,Boolean.TRUE);
                 vehicle.setOnSeries("1111");
                 vehicle.setGear("4");
@@ -82,7 +87,7 @@ public class Monitor {
                     }
                 },5, 5,TimeUnit.SECONDS);
             }
-        },start, TimeUnit.MINUTES);
+        },start, TimeUnit.SECONDS);
         //车辆熄火
         scheduledPool.schedule(new Runnable() {
             @Override
@@ -95,21 +100,26 @@ public class Monitor {
                 vehicle.setGear("1");
                 publishStatus(vehicle);
             }
-        },end, TimeUnit.MINUTES);
+        },end, TimeUnit.SECONDS);
     }
 
     public void publishStatus(Vehicle vehicle){
-        Jedis jedis = JedisBuilder.instance().getJedis();
-        try {
-            String hexTime = DateTimeUtil.TimeToHexString(DateTimeUtil.getDatetime());
-            vehicle.setGpsTime(hexTime);
-            String imei = vehicle.getBindingDeviceImei();
-            String topic = "CarStatusQueue:" + imei;
-            String vehicleJson = JSON.toJSONString(vehicle);
-            log.info("抓取车辆状态，imei = {},vehicle = {}",imei,vehicleJson);
-            jedis.lpush(topic,vehicleJson);
-        } finally {
-            jedis.close();
+        String hexTime = DateTimeUtil.TimeToHexString(DateTimeUtil.getDatetime());
+        vehicle.setGpsTime(hexTime);
+        String imei = vehicle.getBindingDeviceImei();
+        Integer srcLastStatusIndex = indexMap.get(imei);
+        int lastStatusIndex = 0;
+        if(Objects.nonNull(srcLastStatusIndex) && srcLastStatusIndex!=9999){
+            lastStatusIndex = srcLastStatusIndex;
+        }
+        int currentStatusIndex = lastStatusIndex + 1;
+        indexMap.put(imei, currentStatusIndex);
+        String statusMsg = VehicleStatusBuilder.buildAllStatusMessage(vehicle,lastStatusIndex);
+        String topic = StringUtils.join(CAR_STATUS_PREFIX,imei);
+        log.info("发布状态消息，imei = {},statusMsg = {}", imei, statusMsg);
+        if (RedisService.publish(topic,statusMsg) == 0) {
+            String key = StringUtils.join(DELAY_MESSAGE_PREFIX,imei);
+            RedisService.lpush(key,statusMsg);
         }
     }
 }

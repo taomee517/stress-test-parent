@@ -88,18 +88,24 @@ public class MessageBuilder {
         Class<?> clazz = MockDevice.class;
         Method[] methods = clazz.getDeclaredMethods();
         for(Method m: methods){
-            if(StringUtils.countMatches(m.getName(),"getTag1")>0){
+            if(StringUtils.countMatches(m.getName(),"getTag1")>0
+                    || StringUtils.countMatches(m.getName(),"getTag2")>0){
                 StringBuilder sb = new StringBuilder();
                 sb.append("1*9e|7|");
                 String tag = StringUtils.substringBetween(m.getName(),"getTag","Info");
                 String value = ((String) m.invoke(device));
-                sb.append(tag);
-                sb.append(",");
-                sb.append(value);
-                sb.append("|");
-                String baseMsg = outQuote(sb.toString());
-                log.info("发布 ↑↑↑：{}，imei= {}",baseMsg,device.getImei());
-                ctx.writeAndFlush(baseMsg);
+                if(StringUtils.isBlank(value)){
+                    log.warn("{}的值为空！",tag);
+                }
+                if (StringUtils.isNotBlank(value)) {
+                    sb.append(tag);
+                    sb.append(",");
+                    sb.append(value);
+                    sb.append("|");
+                    String baseMsg = outQuote(sb.toString());
+                    log.info("发布 ↑↑↑：{}，imei= {}",baseMsg,device.getImei());
+                    ctx.writeAndFlush(baseMsg);
+                }
             }
         }
     }

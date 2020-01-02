@@ -6,6 +6,8 @@ import com.fzk.otu.client.entity.MockDevice;
 import com.fzk.otu.client.entity.RequestType;
 import com.fzk.otu.client.server.MockClient;
 import com.fzk.otu.client.util.MessageBuilder;
+import com.fzk.stress.entity.JedisConsumer;
+import com.fzk.stress.util.ThreadPoolUtil;
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,10 +18,10 @@ import java.util.List;
 public class PressureTest {
 //    private static String ip = "pre.acceptor.mysirui.com";
 //    private static String ip = "192.168.6.200";
-//    private static String ip = "127.0.0.1";
+    private static String ip = "127.0.0.1";
 //    private static String ip = "192.168.7.71";
 //    private static String ip = "192.168.2.61";
-    private static String ip = "192.168.4.111";
+//    private static String ip = "192.168.4.111";
     private static int port = 2103;
 
     public static void main(String[] args) throws Exception {
@@ -28,7 +30,11 @@ public class PressureTest {
 //        String filePath = "E:\\private\\test\\pressure test\\压测设备.xlsx";
 //        List<String> imeis = FileInfoCheckUtil.getColumnData(filePath);
 
-        List<String> imeis = Arrays.asList("863613035276886","865258037560719","863613035280920");
+        //4.111
+//        List<String> imeis = Arrays.asList("863613035276886","865258037560719","863613035280920");
+        //localhost
+        List<String> imeis = Arrays.asList("156888888888822");
+        ThreadPoolUtil.pool.submit(new JedisConsumer());
         int delaySign = 16;
         int size = imeis.size();
         for (int i=0; i<size; i++) {

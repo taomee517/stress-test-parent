@@ -11,7 +11,9 @@ public class MonitorStarter {
 //        String filePath = "E:\\private\\test\\pressure test\\压测设备.xlsx";
 //        List<String> imeis = FileInfoCheckUtil.getColumnData(filePath);
 
-        List<String> imeis = Arrays.asList("863613035276886","865258037560719","863613035280920");
+        //4.111
+//        List<String> imeis = Arrays.asList("863613035276886","865258037560719","863613035280920");
+        List<String> imeis = Arrays.asList("156888888888822");
         Monitor monitor = new Monitor(imeis);
         monitor.detectRealTimeStatus();
     }

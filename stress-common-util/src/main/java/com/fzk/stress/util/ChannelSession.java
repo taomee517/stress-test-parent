@@ -12,8 +12,9 @@ public class ChannelSession {
     public static final AttributeKey<ConcurrentHashMap<String, Object>> SESSION_KEY = AttributeKey.newInstance("context");
     public static final String DEVICE = "device";
     public static final String CLIENT = "client";
-    public static final String SAME_SERVER = "sameServer";
     public static final String RECONNECT = "reconnect";
+    public static final String LAST_CACHE_TIME = "lastCacheTime";
+    public static final String LAST_STATUS_INDEX = "lastStatusIndex";
 
     private static synchronized void initQueue(Channel ctx) {
         ConcurrentHashMap<String, Object> map = ctx.attr(SESSION_KEY).get();

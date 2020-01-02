@@ -4,7 +4,10 @@ import com.fzk.otu.client.entity.MockDevice;
 import com.fzk.otu.client.entity.RequestType;
 import com.fzk.otu.client.server.MockClient;
 import com.fzk.otu.client.util.MessageBuilder;
+import com.fzk.stress.cache.ChannelCache;
+import com.fzk.stress.entity.RedisService;
 import com.fzk.stress.util.ChannelSession;
+import com.fzk.stress.util.JedisBuilder;
 import com.fzk.stress.util.ThreadPoolUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -13,6 +16,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import redis.clients.jedis.Jedis;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,11 +26,15 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import static com.fzk.stress.cache.TopicCenter.*;
+
 @Data
 @Slf4j
 public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
     /**最终维护的channel*/
     private Channel channel;
+//    /**登录成功标志*/
+//    private boolean loginSuccess;
     /**控制相关的标签*/
     private static List<String> controlTag = new ArrayList<>(Arrays.asList("511","512","513","514","515","516","517","518","519","51a","51b","51c","51d","51e","51f"));
 
@@ -35,15 +43,6 @@ public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         this.channel = ctx.channel();
         log.info("channel active，channel = {}", ctx.channel());
-        ctx.channel().eventLoop().scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                MockDevice device = (MockDevice) ChannelSession.get(ctx.channel(),ChannelSession.DEVICE);
-                String heatbeat = "()";
-                log.info("心跳 ↑↑↑：{}, imei: {}", heatbeat, device.getImei());
-                ctx.channel().writeAndFlush(heatbeat);
-            }
-        },30,150,TimeUnit.SECONDS);
     }
 
     @Override
@@ -55,6 +54,7 @@ public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
         }else {
             log.error("与寻址平台断连,imei = {}, channel = {}",device.getImei(), ctx.channel());
         }
+        ChannelCache.IMEI_CHANNEL_CACHE.invalidate(device.getImei());
         //如果正在重连就不用再添加重连任务了
         Boolean isReconnect = ((Boolean) ChannelSession.get(channel, ChannelSession.RECONNECT));
         if(Objects.nonNull(isReconnect) && isReconnect){
@@ -85,6 +85,8 @@ public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
         String serverMsg = msg.toString();
         MockDevice device = (MockDevice) ChannelSession.get(ctx.channel(),ChannelSession.DEVICE);
         log.info("SERVER ↓↓↓: {}, imei: {}", serverMsg, device.getImei());
+        //更新缓存
+        updateImeiChannel(device.getImei(),ctx.channel());
         String resp = null;
         if(StringUtils.isNotBlank(serverMsg)){
             if (StringUtils.countMatches(serverMsg,"|a2|621")>0) {
@@ -118,8 +120,13 @@ public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
                 }
             }else if(StringUtils.countMatches(serverMsg,"|a4|")>0){
                 log.info("设备：{}登录成功！", device.getImei());
-                //更新设备在线状态 self-define
+                //登录成功后将channel缓存起来
+                ChannelSession.put(channel, ChannelSession.LAST_CACHE_TIME, System.currentTimeMillis());
+                ChannelCache.IMEI_CHANNEL_CACHE.put(device.getImei(), channel);
+                //向平台上报一些基本配置
                 MessageBuilder.publishBaseInfo(device,ctx);
+                //监听定位消息
+                listenVehicleStatus(device.getImei(), ctx.channel());
             }else {
                 String[] units = StringUtils.split(serverMsg,"|");
                 if(units.length<3){
@@ -214,14 +221,9 @@ public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent)evt;
             if(event.equals(IdleStateEvent.WRITER_IDLE_STATE_EVENT)){
-//                String heatbeat = "()";
-//                log.info("心跳 ↑↑↑：{}, imei: {}", heatbeat, device.getImei());
-//                ctx.channel().writeAndFlush(heatbeat);
-
-                //331状态消息
-                String statusMsg = MessageBuilder.buildMessage(RequestType.PUBLISH,device,"331");
-                log.info("定位 ↑↑↑：{}, imei: {}", statusMsg, device.getImei());
-                ctx.channel().writeAndFlush(statusMsg);
+                String heatbeat = "()";
+                log.info("心跳 ↑↑↑：{}, imei: {}", heatbeat, device.getImei());
+                ctx.channel().writeAndFlush(heatbeat);
             }
         }
     }
@@ -274,6 +276,28 @@ public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
                 sb.append(",");
             }
             return StringUtils.removeEnd(sb.toString(),",");
+        }
+    }
+
+    //如果上次更新缓存距当前超过了缓存过期时间的一半，就再次更新
+    private void updateImeiChannel(String imei,Channel channel){
+        Channel lastChannel = ChannelCache.IMEI_CHANNEL_CACHE.getIfPresent(imei);
+        if(Objects.nonNull(lastChannel)){
+            long lastUpdateTime = ((long) ChannelSession.get(lastChannel, ChannelSession.LAST_CACHE_TIME));
+            if((System.currentTimeMillis()-lastUpdateTime) >= ChannelCache.EXPIRE_TIME/2){
+                ChannelSession.put(channel,ChannelSession.LAST_CACHE_TIME,System.currentTimeMillis());
+                ChannelCache.IMEI_CHANNEL_CACHE.put(imei,channel);
+            }
+        }
+    }
+
+
+    private void listenVehicleStatus(String imei,Channel channel){
+        String key = StringUtils.join(DELAY_MESSAGE_PREFIX, imei);
+        String msg = null;
+        while ((msg = RedisService.pop(key)) != null){
+            log.info("积压状态 ↑↑↑:{},imei: {}",msg, imei );
+            channel.writeAndFlush(msg);
         }
     }
 }

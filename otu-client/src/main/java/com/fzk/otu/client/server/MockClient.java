@@ -3,6 +3,7 @@ package com.fzk.otu.client.server;
 import com.fzk.otu.client.entity.MockDevice;
 import com.fzk.otu.client.handler.MockDeviceCodec;
 import com.fzk.otu.client.handler.MockDeviceHandler;
+import com.fzk.stress.constants.StressConstants;
 import com.fzk.stress.util.ChannelSession;
 import com.fzk.stress.util.ThreadPoolUtil;
 import io.netty.bootstrap.Bootstrap;
@@ -51,7 +52,7 @@ public class MockClient {
                     @Override
                     protected void initChannel(NioSocketChannel ch) throws Exception {
                         ChannelPipeline pipeline = ch.pipeline();
-                        pipeline.addLast(new IdleStateHandler(0,1000*20,0, TimeUnit.MILLISECONDS));
+                        pipeline.addLast(new IdleStateHandler(0,1000*150,0, TimeUnit.MILLISECONDS));
                         pipeline.addLast(new MockDeviceCodec());
                         pipeline.addLast(new MockDeviceHandler());
                     }
@@ -71,7 +72,7 @@ public class MockClient {
                     log.info("连接失败，重连,imei= {}",device.getImei());
                     return connect();
                 }
-            },5,TimeUnit.SECONDS);
+            }, StressConstants.RECONNECT_INTERVAL,TimeUnit.SECONDS);
 
             try {
                 channel = channelScheduledFuture.get();

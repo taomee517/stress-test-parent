@@ -232,7 +232,7 @@ public class DateTimeUtil {
 	}
 	
 	@SuppressWarnings("null")
-	public static String HexStringToTime(String hex) {
+	public static String hexStringToTime(String hex) {
 		String time = "";	
 		int year = Integer.parseInt(hex.substring(0, 2),16) + 2000;
 		int month = Integer.parseInt(hex.substring(2, 4),16);
@@ -244,22 +244,29 @@ public class DateTimeUtil {
 		return time.toString();
 		
 	}
-	public static String TimeToHexString(String time) {
+	public static String timeToHexString(String time) {
 		String hex = "";
 		String yyyy = time.split(" ")[0].split("-")[0];
 		String mmm = time.split(" ")[0].split("-")[1];
 		String dd = time.split(" ")[0].split("-")[2];
-		String year = Integer.toHexString(Integer.parseInt(yyyy)-2000);
-		String month = Integer.toHexString(Integer.parseInt(mmm));
-		String day = Integer.toHexString(Integer.parseInt(dd));
+		String year = ZeroFillStrUtil.zeroFillStr(Integer.toHexString(Integer.parseInt(yyyy)-2000),2);
+		String month = ZeroFillStrUtil.zeroFillStr(Integer.toHexString(Integer.parseInt(mmm)),2);
+		String day = ZeroFillStrUtil.zeroFillStr(Integer.toHexString(Integer.parseInt(dd)),2);
 		String hh = time.split(" ")[1].split(":")[0];
 		String mm = time.split(" ")[1].split(":")[1];
 		String ss = time.split(" ")[1].split(":")[2];
-		String hour = Integer.toHexString(Integer.parseInt(hh));
-		String minute = Integer.toHexString(Integer.parseInt(mm));
-		String second = Integer.toHexString(Integer.parseInt(ss));
+		String hour = ZeroFillStrUtil.zeroFillStr(Integer.toHexString(Integer.parseInt(hh)),2);
+		String minute = ZeroFillStrUtil.zeroFillStr(Integer.toHexString(Integer.parseInt(mm)),2);
+		String second = ZeroFillStrUtil.zeroFillStr(Integer.toHexString(Integer.parseInt(ss)),2);
 		hex = hex + year + month + day + hour + minute + second;
 		return hex;
 		
 	}
+
+//	public static void main(String[] args) {
+//		String dateTime = getDatetime();
+//		System.out.println(dateTime);
+//		String hexTime = timeToHexString(dateTime);
+//		System.out.println(hexTime);
+//	}
 }

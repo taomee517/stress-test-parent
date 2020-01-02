@@ -10,10 +10,10 @@ public class Vehicle {
      例如120110030405为18年1月16日3点4分5秒*/
     private String gpsTime;
     private String gpsValid;
-    private String lngSign = "E";
-    private String lng;
-    private String latSign = "N";
-    private String lat;
+    private String lngSign = "e";
+    private String lng = "10637.60128";
+    private String latSign = "n";
+    private String lat = "2943.30582";
     private String speed = "0";
     private String direction;
     private String stars;

@@ -3,7 +3,7 @@ package com.fzk.otu.client.server;
 import com.fzk.otu.client.entity.MockDevice;
 import com.fzk.otu.client.handler.MockDeviceCodec;
 import com.fzk.otu.client.handler.MockDeviceHandler;
-import com.fzk.stress.constants.StressConstants;
+import com.fzk.stress.constants.Configuration;
 import com.fzk.stress.util.ChannelSession;
 import com.fzk.stress.util.ThreadPoolUtil;
 import io.netty.bootstrap.Bootstrap;
@@ -66,13 +66,13 @@ public class MockClient {
             ChannelFuture channelFuture = bootstrap.connect(ip,port).sync();
             channel = channelFuture.channel();
         } catch (Exception e) {
+            log.info("连接失败，重连,imei= {}",device.getImei());
             ScheduledFuture<Channel> channelScheduledFuture = ThreadPoolUtil.schedule.schedule(new Callable<Channel>() {
                 @Override
                 public Channel call() {
-                    log.info("连接失败，重连,imei= {}",device.getImei());
                     return connect();
                 }
-            }, StressConstants.RECONNECT_INTERVAL,TimeUnit.SECONDS);
+            }, Configuration.RECONNECT_INTERVAL,TimeUnit.SECONDS);
 
             try {
                 channel = channelScheduledFuture.get();

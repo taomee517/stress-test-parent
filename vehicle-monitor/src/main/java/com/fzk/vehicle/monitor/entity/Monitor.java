@@ -1,14 +1,11 @@
 package com.fzk.vehicle.monitor.entity;
 
-import com.fzk.stress.cache.ChannelCache;
 import com.fzk.stress.entity.RedisService;
 import com.fzk.stress.entity.Vehicle;
 import com.fzk.stress.util.*;
-import io.netty.channel.Channel;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import redis.clients.jedis.Jedis;
 
 import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -104,7 +101,7 @@ public class Monitor {
     }
 
     public void publishStatus(Vehicle vehicle){
-        String hexTime = DateTimeUtil.TimeToHexString(DateTimeUtil.getDatetime());
+        String hexTime = DateTimeUtil.timeToHexString(DateTimeUtil.getDatetime());
         vehicle.setGpsTime(hexTime);
         String imei = vehicle.getBindingDeviceImei();
         Integer srcLastStatusIndex = indexMap.get(imei);

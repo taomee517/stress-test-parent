@@ -3,6 +3,8 @@ package com.fzk.stress.util;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
 
+import static com.fzk.stress.constants.Configuration.*;
+
 @Slf4j
 public class JedisBuilder {
 
@@ -19,8 +21,8 @@ public class JedisBuilder {
     }
 
     public Jedis getJedis(){
-        Jedis jedis = new Jedis("127.0.0.1",6379);
-        jedis.select(2);
+        Jedis jedis = new Jedis(REDIS_IP,REDIS_PORT);
+        jedis.select(REDIS_DATABASE);
         return jedis;
     }
 }

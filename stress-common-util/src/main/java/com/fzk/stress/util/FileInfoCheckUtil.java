@@ -12,8 +12,14 @@ import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.fzk.stress.constants.Configuration.DEVICE_LIST_PATH;
+
 @Slf4j
 public class FileInfoCheckUtil {
+    public static List<String> getColumnData() throws Exception{
+        return getColumnData(DEVICE_LIST_PATH);
+    }
+
     public static List<String> getColumnData(String filePath) throws Exception{
         return getColumnData(filePath,0, 0);
     }

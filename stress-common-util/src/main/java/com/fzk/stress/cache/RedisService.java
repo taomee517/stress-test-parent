@@ -58,6 +58,15 @@ public class RedisService {
         }
     }
 
+    public static void setEx(String key, int timeOut){
+        Jedis jedis = JedisBuilder.instance().getJedis();
+        try {
+            jedis.setex(key, timeOut, "");
+        } finally {
+            jedis.close();
+        }
+    }
+
     public static void set(String key,boolean flag){
         Jedis jedis = JedisBuilder.instance().getJedis();
         try {

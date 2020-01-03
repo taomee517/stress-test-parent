@@ -9,8 +9,10 @@ import com.fzk.stress.cache.ChannelCache;
 import com.fzk.stress.cache.RedisService;
 import com.fzk.stress.util.ChannelSession;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 
 import static com.fzk.stress.cache.TopicCenter.DELAY_MESSAGE_PREFIX;
@@ -58,13 +61,12 @@ public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
         }
         if (!(Objects.nonNull(this.channel) && this.channel.isActive())) {
             ChannelSession.put(channel,ChannelSession.RECONNECT,Boolean.TRUE);
-            ScheduledFuture<Channel> channelScheduledFuture = ClientConnectUtil.scheduledNextConnectionTask(client);
             try {
-                Channel channel = channelScheduledFuture.get();
-                if (Objects.nonNull(channel)) {
+                ChannelFuture channelFuture = client.connect();
+                if (Objects.nonNull(channelFuture.channel())) {
                     String msg = MessageBuilder.buildAgAsMsg(RequestType.AS,device);
                     log.info("登录 ↑↑↑：{}，imei = {}",msg,device.getImei());
-                    channel.writeAndFlush(msg);
+                    channelFuture.channel().writeAndFlush(msg);
                 }
             } catch (Exception ex) {
                 log.error("重连发生异常：{}",ex);
@@ -103,7 +105,7 @@ public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
                     ChannelSession.put(channel,ChannelSession.DEVICE,device);
                 }else{
                     MockClient client = new MockClient(device,ip,port);
-                    channel = client.connect();
+                    channel = client.connect().channel();
                 }
                 if (Objects.nonNull(channel)) {
                     this.channel = channel;
@@ -213,7 +215,7 @@ public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
         MockDevice device = (MockDevice) ChannelSession.get(ctx.channel(),ChannelSession.DEVICE);
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent)evt;
-            if(event.equals(IdleStateEvent.WRITER_IDLE_STATE_EVENT)){
+            if(event.state().equals(IdleState.WRITER_IDLE)){
                 String heatbeat = "()";
                 log.info("心跳 ↑↑↑：{}, imei: {}", heatbeat, device.getImei());
                 ctx.channel().writeAndFlush(heatbeat);

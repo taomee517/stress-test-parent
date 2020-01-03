@@ -10,6 +10,7 @@ import com.fzk.stress.cache.RedisService;
 import com.fzk.stress.entity.JedisConsumer;
 import com.fzk.stress.util.FileInfoCheckUtil;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -28,17 +29,19 @@ public class PressureTest {
         int delaySign = 16;
         int size = imeis.size();
         for (int i=0; i<size; i++) {
-            Thread.sleep(500);
+            if (i%delaySign==0) {
+                Thread.sleep(500);
+            }
             String imei = imeis.get(i);
             MockDevice device = new Ex223240Device();
             device.setAgFinish(false);
             device.setImei(imei);
             MockClient client = new MockClient(device, ACCEPTOR_IP, ACCEPTOR_PORT);
-            Channel channel = client.connect();
-            if (Objects.nonNull(channel)) {
+            ChannelFuture channelFuture = client.connect();
+            if (Objects.nonNull(channelFuture.channel())) {
                 String msg = MessageBuilder.buildAgAsMsg(RequestType.AS,device);
                 log.info("登录 ↑↑↑：{}，imei = {}",msg,device.getImei());
-                channel.writeAndFlush(msg);
+                channelFuture.channel().writeAndFlush(msg);
             }
         }
     }

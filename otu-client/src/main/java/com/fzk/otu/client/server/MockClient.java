@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Objects;
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -27,7 +27,7 @@ public class MockClient {
     private int port;
     private AtomicInteger reconnectCounter = new AtomicInteger(0);
 
-    private static int workers = Runtime.getRuntime().availableProcessors()*8;
+    private static int workers = Runtime.getRuntime().availableProcessors()*2;
     private static EventLoopGroup eventLoopGroup = new NioEventLoopGroup(workers);
     private static Bootstrap bootstrap = buildBootstrap();
 
@@ -52,7 +52,7 @@ public class MockClient {
                     @Override
                     protected void initChannel(NioSocketChannel ch) throws Exception {
                         ChannelPipeline pipeline = ch.pipeline();
-                        pipeline.addLast(new IdleStateHandler(0,1000*150,0, TimeUnit.MILLISECONDS));
+                        pipeline.addLast(new IdleStateHandler(0,150,0, TimeUnit.SECONDS));
                         pipeline.addLast(new MockDeviceCodec());
                         pipeline.addLast(new MockDeviceHandler());
                     }
@@ -60,27 +60,21 @@ public class MockClient {
         return bootstrap;
     }
 
-    public Channel connect() {
+    public ChannelFuture connect() {
+        ChannelFuture channelFuture = null;
         Channel channel = null;
         try {
-            ChannelFuture channelFuture = bootstrap.connect(ip,port).sync();
-            channel = channelFuture.channel();
+            channelFuture = bootstrap.connect(ip,port).sync();
         } catch (Exception e) {
             log.info("连接失败，重连,imei= {}",device.getImei());
-            ScheduledFuture<Channel> channelScheduledFuture = ClientConnectUtil.scheduledNextConnectionTask(this);
-            try {
-                channel = channelScheduledFuture.get();
-            }catch (InterruptedException inex){
-
-            } catch (Exception ex) {
-                log.error("重连发生异常：{}",ex);
-            }
+            channelFuture = ClientConnectUtil.scheduledNextConnectionTask(this);
         }finally {
+            channel = channelFuture.channel();
             if(Objects.nonNull(channel)){
                 ChannelSession.put(channel, ChannelSession.DEVICE,device);
                 ChannelSession.put(channel,ChannelSession.CLIENT,this);
             }
-            return channel;
+            return channelFuture;
         }
     }
 

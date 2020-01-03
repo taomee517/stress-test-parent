@@ -39,15 +39,15 @@ public class Monitor {
             //模拟一半的车辆处理非ON档
             //处理非ON的设备
             handleParkingVehicle(vehicle);
-//            boolean flag = new Random().nextBoolean();
-            boolean flag = true;
+            boolean flag = new Random().nextBoolean();
+//            boolean flag = true;
             log.info("ON分配，imei = {}, futureDrive = {}", imei, flag);
             if(flag){
                 //未来某个时刻启动并行驶一段轨迹
-//                int start = new Random().nextInt(20);
-//                int end = new Random().nextInt(60) + start;
-                int start = 1;
-                int end = 2;
+                int start = new Random().nextInt(20);
+                int end = new Random().nextInt(60) + start;
+//                int start = 1;
+//                int end = 2;
                 log.info("车辆{}分钟后，进入驾驶状态，imei = {},start = {},end = {}",start, imei, start, end);
                 driveTheCarInFuture(vehicle,start,end);
             }

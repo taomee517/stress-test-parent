@@ -10,8 +10,15 @@ public class TopicCenter {
 
     public static final String ON_STATUS_PREFIX = "ON:";
 
+    public static final String RECONNECT_EXPIRED_TOPIC = "__keyevent@2__:expired";
+    public static final String RECONNECT_TOPIC = "Reconnect:";
+
 
     public static String buildOnKey(String imei){
         return StringUtils.join(ON_STATUS_PREFIX,imei);
+    }
+
+    public static String buildReconnectExpireKey(String imei){
+        return StringUtils.join(RECONNECT_TOPIC,imei);
     }
 }

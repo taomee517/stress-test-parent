@@ -9,7 +9,7 @@ public class Vehicle {
     /**格式为年月日时分秒
      例如120110030405为18年1月16日3点4分5秒*/
     private String gpsTime;
-    private String gpsValid;
+    private String gpsValid = "1";
     private String lngSign = "e";
     private String lng = "10637.60128";
     private String latSign = "n";

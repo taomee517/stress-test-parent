@@ -3,9 +3,8 @@ package com.fzk.otu.client.server;
 import com.fzk.otu.client.entity.MockDevice;
 import com.fzk.otu.client.handler.MockDeviceCodec;
 import com.fzk.otu.client.handler.MockDeviceHandler;
-import com.fzk.stress.constants.Configuration;
+import com.fzk.otu.client.util.ClientConnectUtil;
 import com.fzk.stress.util.ChannelSession;
-import com.fzk.stress.util.ThreadPoolUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -16,9 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Objects;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Data
@@ -26,6 +25,7 @@ public class MockClient {
     private MockDevice device;
     private String ip;
     private int port;
+    private AtomicInteger reconnectCounter = new AtomicInteger(0);
 
     private static int workers = Runtime.getRuntime().availableProcessors()*8;
     private static EventLoopGroup eventLoopGroup = new NioEventLoopGroup(workers);
@@ -67,15 +67,11 @@ public class MockClient {
             channel = channelFuture.channel();
         } catch (Exception e) {
             log.info("连接失败，重连,imei= {}",device.getImei());
-            ScheduledFuture<Channel> channelScheduledFuture = ThreadPoolUtil.schedule.schedule(new Callable<Channel>() {
-                @Override
-                public Channel call() {
-                    return connect();
-                }
-            }, Configuration.RECONNECT_INTERVAL,TimeUnit.SECONDS);
-
+            ScheduledFuture<Channel> channelScheduledFuture = ClientConnectUtil.scheduledNextConnectionTask(this);
             try {
                 channel = channelScheduledFuture.get();
+            }catch (InterruptedException inex){
+
             } catch (Exception ex) {
                 log.error("重连发生异常：{}",ex);
             }

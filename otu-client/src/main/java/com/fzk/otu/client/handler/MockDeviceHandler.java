@@ -3,12 +3,11 @@ package com.fzk.otu.client.handler;
 import com.fzk.otu.client.entity.MockDevice;
 import com.fzk.otu.client.entity.RequestType;
 import com.fzk.otu.client.server.MockClient;
+import com.fzk.otu.client.util.ClientConnectUtil;
 import com.fzk.otu.client.util.MessageBuilder;
 import com.fzk.stress.cache.ChannelCache;
-import com.fzk.stress.entity.RedisService;
+import com.fzk.stress.cache.RedisService;
 import com.fzk.stress.util.ChannelSession;
-import com.fzk.stress.util.JedisBuilder;
-import com.fzk.stress.util.ThreadPoolUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -16,17 +15,14 @@ import io.netty.handler.timeout.IdleStateEvent;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import redis.clients.jedis.Jedis;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
-import static com.fzk.stress.cache.TopicCenter.*;
+import static com.fzk.stress.cache.TopicCenter.DELAY_MESSAGE_PREFIX;
 
 @Data
 @Slf4j
@@ -62,10 +58,7 @@ public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
         }
         if (!(Objects.nonNull(this.channel) && this.channel.isActive())) {
             ChannelSession.put(channel,ChannelSession.RECONNECT,Boolean.TRUE);
-            ScheduledFuture<Channel> channelScheduledFuture = ThreadPoolUtil.schedule.schedule((Callable<Channel>) () -> {
-                return client.connect();
-            },5, TimeUnit.SECONDS);
-
+            ScheduledFuture<Channel> channelScheduledFuture = ClientConnectUtil.scheduledNextConnectionTask(client);
             try {
                 Channel channel = channelScheduledFuture.get();
                 if (Objects.nonNull(channel)) {

@@ -1,8 +1,11 @@
 package com.fzk.vehicle.monitor.entity;
 
-import com.fzk.stress.entity.RedisService;
+import com.fzk.stress.cache.RedisService;
+import com.fzk.stress.cache.TopicCenter;
 import com.fzk.stress.entity.Vehicle;
-import com.fzk.stress.util.*;
+import com.fzk.stress.util.DateTimeUtil;
+import com.fzk.stress.util.ThreadPoolUtil;
+import com.fzk.stress.util.VehicleStatusBuilder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -18,7 +21,6 @@ import static com.fzk.stress.cache.TopicCenter.DELAY_MESSAGE_PREFIX;
 @Slf4j
 public class Monitor {
     private List<String> imeis;
-    private static volatile Map<String,Boolean> onMap = new HashMap<>(16);
     private static volatile Map<String,Integer> indexMap = new HashMap<>(16);
     private static ScheduledThreadPoolExecutor scheduledPool = ThreadPoolUtil.schedule;
 
@@ -35,13 +37,15 @@ public class Monitor {
             //模拟一半的车辆处理非ON档
             //处理非ON的设备
             handleParkingVehicle(vehicle);
-            boolean flag = new Random().nextBoolean();
+//            boolean flag = new Random().nextBoolean();
+            boolean flag = true;
             log.info("ON分配，imei = {}, futureDrive = {}", imei, flag);
             if(flag){
                 //未来某个时刻启动并行驶一段轨迹
-                int start = new Random().nextInt(20);
+//                int start = new Random().nextInt(20);
+                int start = 1;
                 int end = new Random().nextInt(60) + start;
-                log.info("车辆即将进入驾驶状态，imei = {},start = {},end = {}",imei,start,end);
+                log.info("车辆{}分钟后，进入驾驶状态，imei = {},start = {},end = {}",start, imei, start, end);
                 driveTheCarInFuture(vehicle,start,end);
             }
         }
@@ -52,13 +56,13 @@ public class Monitor {
         scheduledPool.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                Boolean onSignal = onMap.get(imei);
+                boolean onSignal = RedisService.getOnStatus(imei);
                 //没有存入，就表示非ON状态
                 if(Objects.isNull(onSignal)){
                     publishStatus(vehicle);
                 }
             }
-        },5, 30,TimeUnit.SECONDS);
+        },5, 150,TimeUnit.SECONDS);
     }
 
     private void driveTheCarInFuture(Vehicle vehicle,int start, int end){
@@ -69,7 +73,7 @@ public class Monitor {
                 //车辆变为ON
                 String imei = vehicle.getBindingDeviceImei();
                 log.info("车辆启动，imei = {}",imei);
-                onMap.put(imei,Boolean.TRUE);
+                RedisService.set(TopicCenter.buildOnKey(imei),true);
                 vehicle.setOnSeries("1111");
                 vehicle.setGear("4");
                 publishStatus(vehicle);
@@ -77,14 +81,14 @@ public class Monitor {
                     @Override
                     public void run() {
                         String imei = vehicle.getBindingDeviceImei();
-                        Boolean onSignal = onMap.get(imei);
+                        boolean onSignal = RedisService.getOnStatus(imei);
                         if(onSignal){
                             publishStatus(vehicle);
                         }
                     }
                 },5, 5,TimeUnit.SECONDS);
             }
-        },start, TimeUnit.SECONDS);
+        },start, TimeUnit.MINUTES);
         //车辆熄火
         scheduledPool.schedule(new Runnable() {
             @Override
@@ -92,12 +96,12 @@ public class Monitor {
                 //车辆变为ON
                 String imei = vehicle.getBindingDeviceImei();
                 log.info("车辆熄火，imei = {}",imei);
-                onMap.remove(imei);
+                RedisService.delete(TopicCenter.buildOnKey(imei));
                 vehicle.setOnSeries("2222");
                 vehicle.setGear("1");
                 publishStatus(vehicle);
             }
-        },end, TimeUnit.SECONDS);
+        },end, TimeUnit.MINUTES);
     }
 
     public void publishStatus(Vehicle vehicle){

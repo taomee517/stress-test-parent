@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -23,6 +24,7 @@ public class Monitor {
     private List<String> imeis;
     private static volatile Map<String,Integer> indexMap = new HashMap<>(16);
     private static ScheduledThreadPoolExecutor scheduledPool = ThreadPoolUtil.schedule;
+    private static volatile Map<String,ScheduledFuture> scheduledFutureMap = new HashMap<>(16);
 
     public Monitor(List<String> imeis) {
         this.imeis = imeis;
@@ -43,8 +45,9 @@ public class Monitor {
             if(flag){
                 //未来某个时刻启动并行驶一段轨迹
 //                int start = new Random().nextInt(20);
+//                int end = new Random().nextInt(60) + start;
                 int start = 1;
-                int end = new Random().nextInt(60) + start;
+                int end = 2;
                 log.info("车辆{}分钟后，进入驾驶状态，imei = {},start = {},end = {}",start, imei, start, end);
                 driveTheCarInFuture(vehicle,start,end);
             }
@@ -77,16 +80,24 @@ public class Monitor {
                 vehicle.setOnSeries("1111");
                 vehicle.setGear("4");
                 publishStatus(vehicle);
-                scheduledPool.scheduleAtFixedRate(new Runnable() {
+                ScheduledFuture future = scheduledPool.scheduleAtFixedRate(new Runnable() {
                     @Override
                     public void run() {
-                        String imei = vehicle.getBindingDeviceImei();
                         boolean onSignal = RedisService.getOnStatus(imei);
                         if(onSignal){
                             publishStatus(vehicle);
+                        }else {
+                            ScheduledFuture scheduledFutureTask = scheduledFutureMap.get(imei);
+                            if (Objects.nonNull(scheduledFutureTask)) {
+                                log.info("取消定时定位任务，imei = {}", imei);
+                                scheduledFutureTask.cancel(true);
+                            }
                         }
                     }
                 },5, 5,TimeUnit.SECONDS);
+                scheduledFutureMap.put(imei,future);
+                log.info("点火线程关闭");
+                Thread.currentThread().interrupt();
             }
         },start, TimeUnit.MINUTES);
         //车辆熄火
@@ -100,6 +111,8 @@ public class Monitor {
                 vehicle.setOnSeries("2222");
                 vehicle.setGear("1");
                 publishStatus(vehicle);
+                log.info("熄火线程关闭");
+                Thread.currentThread().interrupt();
             }
         },end, TimeUnit.MINUTES);
     }

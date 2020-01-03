@@ -44,7 +44,7 @@ public class ClientConnectUtil {
             log.debug("关闭上一定时线程：{}",lastThread.getName());
             lastThread.interrupt();
         }
-        log.info("{}秒后重连！", nextConnectDelay);
+        log.info("{}秒后重连！imei = {}", nextConnectDelay, imei);
         ScheduledFuture<Channel> channelScheduledFuture = ThreadPoolUtil.schedule.schedule(new Callable<Channel>() {
             @Override
             public Channel call() throws Exception {

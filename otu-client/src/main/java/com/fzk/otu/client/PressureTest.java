@@ -24,7 +24,10 @@ public class PressureTest {
 
     public static void main(String[] args) throws Exception {
         List<String> imeis = FileInfoCheckUtil.getColumnData();
+
+        /**单一设备验证时用*/
 //        List<String> imeis = Arrays.asList("865886034429940");
+
         new Thread(new JedisConsumer()).start();
         HashedWheelTimer hashedWheelTimer = HashedWheelTimerUtil.instance().getTimer();
         int delaySign = LOGIN_COUNT_ONE_TICK;

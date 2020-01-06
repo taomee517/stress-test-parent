@@ -10,9 +10,6 @@ public class Configuration {
     public static final String ACCEPTOR_IP = "127.0.0.1";
     public static final int ACCEPTOR_PORT = 2103;
 
-    /**重新建连的时间间隔（秒）*/
-    public static final int RECONNECT_INTERVAL = 60;
-
     /**
      * 时间轮的时间间隔(毫秒)
      * 为保证工具的反应效率，这个值不要高于1秒
@@ -25,5 +22,13 @@ public class Configuration {
     public static final String REDIS_IP = "127.0.0.1";
     public static final int REDIS_PORT = 6379;
     public static final int REDIS_DATABASE = 2;
+
+
+    /**重新建连的时间间隔（秒）*/
+    public static final int RECONNECT_INTERVAL = 60;
+
+    /**on状态时状态上报间隔时间（秒）*/
+    public static final int ON_REPORT_INTERVAL = 5;
+    public static final int NONE_ON_REPORT_INTERVAL = 150;
 
 }

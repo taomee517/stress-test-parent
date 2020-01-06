@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.fzk.stress.cache.TopicCenter.DELAY_MESSAGE_PREFIX;
 
@@ -58,7 +59,8 @@ public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
         }
         if (!(Objects.nonNull(this.channel) && this.channel.isActive())) {
             ChannelSession.put(channel,ChannelSession.RECONNECT,Boolean.TRUE);
-            try {
+            try{
+                client.setReconnectCounter(new AtomicInteger(0));
                 ReconnectUtil.buildReconnectTask(client);
             } catch (Exception ex) {
                 log.error("重连发生异常：{}",ex);

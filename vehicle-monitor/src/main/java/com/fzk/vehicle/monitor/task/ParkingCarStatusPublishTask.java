@@ -8,7 +8,6 @@ import io.netty.util.HashedWheelTimer;
 import io.netty.util.Timeout;
 import io.netty.util.TimerTask;
 
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static com.fzk.stress.constants.Configuration.NONE_ON_REPORT_INTERVAL;

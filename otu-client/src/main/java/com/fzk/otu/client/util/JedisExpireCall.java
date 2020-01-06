@@ -3,7 +3,6 @@ package com.fzk.otu.client.util;
 import com.fzk.otu.client.server.MockClient;
 import com.fzk.stress.cache.RedisService;
 import com.fzk.stress.cache.TopicCenter;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

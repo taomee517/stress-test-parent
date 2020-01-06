@@ -5,7 +5,6 @@ import com.fzk.otu.client.entity.Ex223240Device;
 import com.fzk.otu.client.entity.MockDevice;
 import com.fzk.otu.client.server.MockClient;
 import com.fzk.otu.client.util.HashedWheelTask;
-import com.fzk.stress.cache.RedisService;
 import com.fzk.stress.entity.JedisConsumer;
 import com.fzk.stress.util.FileInfoCheckUtil;
 import com.fzk.stress.util.HashedWheelTimerUtil;
@@ -13,7 +12,6 @@ import io.netty.util.HashedWheelTimer;
 import io.netty.util.TimerTask;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 

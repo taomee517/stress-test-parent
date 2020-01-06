@@ -3,46 +3,43 @@ package com.fzk.otu.client;
 
 import com.fzk.otu.client.entity.Ex223240Device;
 import com.fzk.otu.client.entity.MockDevice;
-import com.fzk.otu.client.entity.RequestType;
 import com.fzk.otu.client.server.MockClient;
-import com.fzk.otu.client.util.MessageBuilder;
+import com.fzk.otu.client.util.HashedWheelTask;
 import com.fzk.stress.cache.RedisService;
 import com.fzk.stress.entity.JedisConsumer;
 import com.fzk.stress.util.FileInfoCheckUtil;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
+import com.fzk.stress.util.HashedWheelTimerUtil;
+import io.netty.util.HashedWheelTimer;
+import io.netty.util.TimerTask;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
-import static com.fzk.stress.constants.Configuration.ACCEPTOR_IP;
-import static com.fzk.stress.constants.Configuration.ACCEPTOR_PORT;
+import static com.fzk.stress.constants.Configuration.*;
 
 @Slf4j
 public class PressureTest {
 
     public static void main(String[] args) throws Exception {
         RedisService.clearAllOnStatus();
+        RedisService.clearAllDelayMessage();
         List<String> imeis = FileInfoCheckUtil.getColumnData();
+//        List<String> imeis = Arrays.asList("865886034429940");
         new Thread(new JedisConsumer()).start();
-        int delaySign = 16;
+        HashedWheelTimer hashedWheelTimer = HashedWheelTimerUtil.instance().getTimer();
+        int delaySign = LOGIN_COUNT_ONE_SECOND;
         int size = imeis.size();
         for (int i=0; i<size; i++) {
-            if (i%delaySign==0) {
-                Thread.sleep(500);
-            }
             String imei = imeis.get(i);
+            int delayUnit = i/delaySign + 1;
             MockDevice device = new Ex223240Device();
             device.setAgFinish(false);
             device.setImei(imei);
             MockClient client = new MockClient(device, ACCEPTOR_IP, ACCEPTOR_PORT);
-            ChannelFuture channelFuture = client.connect();
-            if (Objects.nonNull(channelFuture.channel())) {
-                String msg = MessageBuilder.buildAgAsMsg(RequestType.AS,device);
-                log.info("登录 ↑↑↑：{}，imei = {}",msg,device.getImei());
-                channelFuture.channel().writeAndFlush(msg);
-            }
+            TimerTask loginTask = new HashedWheelTask(client);
+            hashedWheelTimer.newTimeout(loginTask,1000 * delayUnit, TimeUnit.MILLISECONDS);
         }
     }
 }

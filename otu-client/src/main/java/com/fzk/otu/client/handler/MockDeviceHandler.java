@@ -3,13 +3,12 @@ package com.fzk.otu.client.handler;
 import com.fzk.otu.client.entity.MockDevice;
 import com.fzk.otu.client.entity.RequestType;
 import com.fzk.otu.client.server.MockClient;
-import com.fzk.otu.client.util.ClientConnectUtil;
 import com.fzk.otu.client.util.MessageBuilder;
+import com.fzk.otu.client.util.ReconnectUtil;
 import com.fzk.stress.cache.ChannelCache;
 import com.fzk.stress.cache.RedisService;
 import com.fzk.stress.util.ChannelSession;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
@@ -22,8 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledFuture;
 
 import static com.fzk.stress.cache.TopicCenter.DELAY_MESSAGE_PREFIX;
 
@@ -62,12 +59,7 @@ public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
         if (!(Objects.nonNull(this.channel) && this.channel.isActive())) {
             ChannelSession.put(channel,ChannelSession.RECONNECT,Boolean.TRUE);
             try {
-                ChannelFuture channelFuture = client.connect();
-                if (Objects.nonNull(channelFuture.channel())) {
-                    String msg = MessageBuilder.buildAgAsMsg(RequestType.AS,device);
-                    log.info("登录 ↑↑↑：{}，imei = {}",msg,device.getImei());
-                    channelFuture.channel().writeAndFlush(msg);
-                }
+                ReconnectUtil.buildReconnectTask(client);
             } catch (Exception ex) {
                 log.error("重连发生异常：{}",ex);
             }

@@ -13,6 +13,9 @@ public class Configuration {
     /**重新建连的时间间隔（秒）*/
     public static final int RECONNECT_INTERVAL = 60;
 
+    /**每秒上线设备数*/
+    public static final int LOGIN_COUNT_ONE_SECOND = 16;
+
     /**redis配置*/
     public static final String REDIS_IP = "127.0.0.1";
     public static final int REDIS_PORT = 6379;

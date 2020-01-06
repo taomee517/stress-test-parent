@@ -105,4 +105,18 @@ public class RedisService {
             jedis.close();
         }
     }
+
+    public static void clearAllDelayMessage(){
+        Jedis jedis = JedisBuilder.instance().getJedis();
+        try {
+            Set<String> onKeys =  jedis.keys(StringUtils.join(TopicCenter.DELAY_MESSAGE_PREFIX, "*"));
+            if(Objects.nonNull(onKeys) && onKeys.size()!=0){
+                for(String key:onKeys){
+                    jedis.del(key);
+                }
+            }
+        } finally {
+            jedis.close();
+        }
+    }
 }

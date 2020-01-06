@@ -4,17 +4,22 @@ import com.fzk.otu.client.entity.MockDevice;
 import com.fzk.otu.client.handler.MockDeviceCodec;
 import com.fzk.otu.client.handler.MockDeviceHandler;
 import com.fzk.otu.client.util.ClientConnectUtil;
+import com.fzk.otu.client.util.HashedWheelTask;
+import com.fzk.otu.client.util.ReconnectUtil;
 import com.fzk.stress.util.ChannelSession;
+import com.fzk.stress.util.HashedWheelTimerUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.HashedWheelTimer;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Objects;
+import java.util.TimerTask;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -62,20 +67,26 @@ public class MockClient {
 
     public ChannelFuture connect() {
         ChannelFuture channelFuture = null;
-        Channel channel = null;
         try {
-            channelFuture = bootstrap.connect(ip,port).sync();
-        } catch (Exception e) {
-            log.info("连接失败，重连,imei= {}",device.getImei());
-            channelFuture = ClientConnectUtil.scheduledNextConnectionTask(this);
-        }finally {
-            channel = channelFuture.channel();
-            if(Objects.nonNull(channel)){
-                ChannelSession.put(channel, ChannelSession.DEVICE,device);
-                ChannelSession.put(channel,ChannelSession.CLIENT,this);
-            }
+            channelFuture = bootstrap.connect(ip,port).addListeners(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    if(future.isSuccess()){
+                        log.debug("设备imei={}与平台创建连接成功！",device.getImei());
+                        Channel channel = future.channel();
+                        if(Objects.nonNull(channel)){
+                            ChannelSession.put(channel, ChannelSession.DEVICE,device);
+                            ChannelSession.put(channel,ChannelSession.CLIENT,MockClient.this);
+                        }
+                    }else {
+                        ReconnectUtil.buildReconnectTask(MockClient.this);
+                    }
+                }
+            }).sync();
+        } finally {
             return channelFuture;
         }
+
     }
 
 

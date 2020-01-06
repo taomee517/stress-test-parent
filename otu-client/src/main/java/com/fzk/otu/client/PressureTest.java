@@ -4,14 +4,14 @@ package com.fzk.otu.client;
 import com.fzk.otu.client.entity.Ex223240Device;
 import com.fzk.otu.client.entity.MockDevice;
 import com.fzk.otu.client.server.MockClient;
-import com.fzk.otu.client.util.HashedWheelTask;
+import com.fzk.otu.client.util.ClientConnectTask;
 import com.fzk.stress.entity.JedisConsumer;
-import com.fzk.stress.util.FileInfoCheckUtil;
 import com.fzk.stress.util.HashedWheelTimerUtil;
 import io.netty.util.HashedWheelTimer;
 import io.netty.util.TimerTask;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -21,10 +21,10 @@ import static com.fzk.stress.constants.Configuration.*;
 public class PressureTest {
 
     public static void main(String[] args) throws Exception {
-        List<String> imeis = FileInfoCheckUtil.getColumnData();
+//        List<String> imeis = FileInfoCheckUtil.getColumnData();
 
         /**单一设备验证时用*/
-//        List<String> imeis = Arrays.asList("865886034429940");
+        List<String> imeis = Arrays.asList("865886034429940");
 
         new Thread(new JedisConsumer()).start();
         HashedWheelTimer hashedWheelTimer = HashedWheelTimerUtil.instance().getTimer();
@@ -39,7 +39,7 @@ public class PressureTest {
             device.setAgFinish(false);
             device.setImei(imei);
             MockClient client = new MockClient(device, ACCEPTOR_IP, ACCEPTOR_PORT);
-            TimerTask loginTask = new HashedWheelTask(client);
+            TimerTask loginTask = new ClientConnectTask(client);
             hashedWheelTimer.newTimeout(loginTask,100, TimeUnit.MILLISECONDS);
         }
     }

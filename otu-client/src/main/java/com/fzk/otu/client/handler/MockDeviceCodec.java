@@ -1,6 +1,10 @@
 package com.fzk.otu.client.handler;
 
 
+import com.fzk.otu.client.entity.MockDevice;
+import com.fzk.stress.cache.RedisService;
+import com.fzk.stress.cache.TopicCenter;
+import com.fzk.stress.util.ChannelSession;
 import com.fzk.stress.util.ConvertUtil;
 import com.fzk.stress.util.OTUCodecUtil;
 import io.netty.buffer.ByteBuf;
@@ -12,10 +16,25 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.List;
 import java.util.Objects;
 
+import static com.fzk.stress.constants.Configuration.RESEND_MSG_COPY_TTL;
+import static com.fzk.stress.constants.Configuration.RESEND_MSG_INTERVAL;
+
 @Slf4j
 public class MockDeviceCodec extends ByteToMessageCodec<String> {
+    private static final String NEED_ACK_STATUS_SIGN = "|7|331,";
+    private static final String STATUS_ACK_SIGN = "|8|331";
+
     @Override
     protected void encode(ChannelHandlerContext ctx, String msg, ByteBuf out) throws Exception {
+        //如果是7|331消息，必须收到平台的回复
+        //如果没有收到回复，需要重新上报
+        if(StringUtils.countMatches(msg,NEED_ACK_STATUS_SIGN)>0){
+            String imei = ((MockDevice) ChannelSession.get(ctx.channel(), ChannelSession.DEVICE)).getImei();
+            String resendKey = TopicCenter.buildCommonKey(TopicCenter.RESEND_TOPIC,imei);
+            String resendCopyKey = TopicCenter.buildCommonKey(TopicCenter.RESEND_COPY_TOPIC,imei);
+            RedisService.setEx(resendKey,RESEND_MSG_INTERVAL);
+            RedisService.lpush(resendCopyKey, msg);
+        }
         byte[] bytes = msg.getBytes();
         out.writeBytes(bytes);
     }
@@ -32,6 +51,14 @@ public class MockDeviceCodec extends ByteToMessageCodec<String> {
             }
             if (Objects.nonNull(msg)) {
                 out.add(msg);
+                if(StringUtils.countMatches(msg,STATUS_ACK_SIGN)>0) {
+                    String imei = ((MockDevice) ChannelSession.get(ctx.channel(), ChannelSession.DEVICE)).getImei();
+                    log.info("收到状态回复，imei = {}",imei);
+                    String resendKey = TopicCenter.buildCommonKey(TopicCenter.RESEND_TOPIC,imei);
+                    RedisService.delete(resendKey);
+                    String resendCopyKey = TopicCenter.buildCommonKey(TopicCenter.RESEND_COPY_TOPIC,imei);
+                    RedisService.pop(resendCopyKey);
+                }
             }
         }catch (Exception e){
             byte[] bytes = new byte[in.readableBytes()];

@@ -10,10 +10,10 @@ import java.util.List;
 public class MonitorStarter {
     public static void main(String[] args) throws Exception {
         RedisService.clearAllOnStatus();
-        List<String> imeis = FileInfoCheckUtil.getColumnData();
+//        List<String> imeis = FileInfoCheckUtil.getColumnData();
 
         /**单一设备验证用*/
-//        List<String> imeis = Arrays.asList("865886034429940");
+        List<String> imeis = Arrays.asList("865886034429940");
 
         Monitor monitor = new Monitor(imeis);
         monitor.detectRealTimeStatus();

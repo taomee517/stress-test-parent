@@ -48,6 +48,15 @@ public class RedisService {
         }
     }
 
+    public static void lrem(String key,String value){
+        Jedis jedis = JedisBuilder.instance().getJedis();
+        try {
+            jedis.lrem(key,0, value);
+        } finally {
+            jedis.close();
+        }
+    }
+
 
     public static String get(String key){
         Jedis jedis = JedisBuilder.instance().getJedis();
@@ -59,9 +68,13 @@ public class RedisService {
     }
 
     public static void setEx(String key, int timeOut){
+        setEx(key,"", timeOut);
+    }
+
+    public static void setEx(String key, String value, int timeOut){
         Jedis jedis = JedisBuilder.instance().getJedis();
         try {
-            jedis.setex(key, timeOut, "");
+            jedis.setex(key, timeOut, value);
         } finally {
             jedis.close();
         }
@@ -85,11 +98,20 @@ public class RedisService {
         }
     }
 
+    public static long llen(String key){
+        Jedis jedis = JedisBuilder.instance().getJedis();
+        try {
+            return jedis.llen(key);
+        } finally {
+            jedis.close();
+        }
+    }
+
     public static long getDelayMessageSize(String imei){
         Jedis jedis = JedisBuilder.instance().getJedis();
         try {
             String key = TopicCenter.buildDelayMessageKey(imei);
-            return jedis.llen(key);
+            return llen(key);
         } finally {
             jedis.close();
         }

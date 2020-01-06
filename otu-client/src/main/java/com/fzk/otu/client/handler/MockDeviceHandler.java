@@ -7,6 +7,7 @@ import com.fzk.otu.client.util.MessageBuilder;
 import com.fzk.otu.client.util.ReconnectUtil;
 import com.fzk.stress.cache.ChannelCache;
 import com.fzk.stress.cache.RedisService;
+import com.fzk.stress.cache.TopicCenter;
 import com.fzk.stress.util.ChannelSession;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -114,8 +115,8 @@ public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
                 ChannelCache.IMEI_CHANNEL_CACHE.put(device.getImei(), channel);
                 //向平台上报一些基本配置
                 MessageBuilder.publishBaseInfo(device,ctx);
-                //监听定位消息
-                listenVehicleStatus(device.getImei(), ctx.channel());
+                //消费积压消息
+                consumeDelayMessage(device.getImei(), ctx.channel());
             }else {
                 String[] units = StringUtils.split(serverMsg,"|");
                 if(units.length<3){
@@ -281,12 +282,22 @@ public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
     }
 
 
-    private void listenVehicleStatus(String imei,Channel channel){
-        String key = StringUtils.join(DELAY_MESSAGE_PREFIX, imei);
+    private void consumeDelayMessage(String imei,Channel channel){
+        String delayKey = TopicCenter.buildDelayMessageKey(imei);
+        String delayResendKey = TopicCenter.buildCommonKey(TopicCenter.RESEND_COPY_TOPIC,imei);
         String msg = null;
-        while ((msg = RedisService.pop(key)) != null){
-            log.info("积压状态 ↑↑↑:{},imei: {}",msg, imei );
+
+        long resendSize = RedisService.llen(delayResendKey);
+        for (int i=0;i<resendSize;i++) {
+            msg = RedisService.pop(delayResendKey);
+            log.info("积压重传消息 ↑↑↑:{},imei: {}",msg, imei);
             channel.writeAndFlush(msg);
         }
+
+        while ((msg = RedisService.pop(delayKey)) != null){
+            log.info("积压定位状态 ↑↑↑:{},imei: {}",msg, imei );
+            channel.writeAndFlush(msg);
+        }
+
     }
 }

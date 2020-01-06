@@ -44,7 +44,7 @@ public class ReconnectUtil {
 
 
     public static void buildReconnectTask(MockClient client){
-        HashedWheelTask task = new HashedWheelTask(client);
+        ClientConnectTask task = new ClientConnectTask(client);
         int nextConnectInterval = getNextConnectInterval(client);
         log.info("设备imei = {}，{}秒后与平台发起重连",client.getDevice().getImei(),nextConnectInterval);
         HashedWheelTimerUtil.instance().getTimer().newTimeout(task,nextConnectInterval, TimeUnit.SECONDS);

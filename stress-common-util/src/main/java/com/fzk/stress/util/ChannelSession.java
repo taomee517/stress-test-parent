@@ -15,6 +15,7 @@ public class ChannelSession {
     public static final String RECONNECT = "reconnect";
     public static final String LAST_CACHE_TIME = "lastCacheTime";
     public static final String LAST_STATUS_INDEX = "lastStatusIndex";
+    public static final String NEED_RESEND_MSG = "resendMsg";
 
     private static synchronized void initQueue(Channel ctx) {
         ConcurrentHashMap<String, Object> map = ctx.attr(SESSION_KEY).get();

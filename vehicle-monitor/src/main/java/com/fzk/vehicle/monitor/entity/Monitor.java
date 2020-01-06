@@ -16,7 +16,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import static com.fzk.stress.cache.TopicCenter.CAR_STATUS_PREFIX;
-import static com.fzk.stress.cache.TopicCenter.DELAY_MESSAGE_PREFIX;
 
 @Data
 @Slf4j
@@ -132,7 +131,7 @@ public class Monitor {
         String topic = StringUtils.join(CAR_STATUS_PREFIX,imei);
         log.info("发布状态消息，imei = {},statusMsg = {}", imei, statusMsg);
         if (RedisService.publish(topic,statusMsg) == 0) {
-            String key = StringUtils.join(DELAY_MESSAGE_PREFIX,imei);
+            String key = TopicCenter.buildDelayMessageKey(imei); ;
             RedisService.lpush(key,statusMsg);
         }
     }

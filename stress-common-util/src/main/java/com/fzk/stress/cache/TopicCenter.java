@@ -21,4 +21,8 @@ public class TopicCenter {
     public static String buildReconnectExpireKey(String imei){
         return StringUtils.join(RECONNECT_TOPIC,imei);
     }
+
+    public static String buildDelayMessageKey(String imei){
+        return StringUtils.join(DELAY_MESSAGE_PREFIX,imei);
+    }
 }

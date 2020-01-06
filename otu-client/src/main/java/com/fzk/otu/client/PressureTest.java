@@ -23,23 +23,23 @@ import static com.fzk.stress.constants.Configuration.*;
 public class PressureTest {
 
     public static void main(String[] args) throws Exception {
-        RedisService.clearAllOnStatus();
-        RedisService.clearAllDelayMessage();
         List<String> imeis = FileInfoCheckUtil.getColumnData();
 //        List<String> imeis = Arrays.asList("865886034429940");
         new Thread(new JedisConsumer()).start();
         HashedWheelTimer hashedWheelTimer = HashedWheelTimerUtil.instance().getTimer();
-        int delaySign = LOGIN_COUNT_ONE_SECOND;
+        int delaySign = LOGIN_COUNT_ONE_TICK;
         int size = imeis.size();
         for (int i=0; i<size; i++) {
+            if(i%delaySign==0){
+                Thread.sleep(HASH_WHEEL_TICK);
+            }
             String imei = imeis.get(i);
-            int delayUnit = i/delaySign + 1;
             MockDevice device = new Ex223240Device();
             device.setAgFinish(false);
             device.setImei(imei);
             MockClient client = new MockClient(device, ACCEPTOR_IP, ACCEPTOR_PORT);
             TimerTask loginTask = new HashedWheelTask(client);
-            hashedWheelTimer.newTimeout(loginTask,1000 * delayUnit, TimeUnit.MILLISECONDS);
+            hashedWheelTimer.newTimeout(loginTask,100, TimeUnit.MILLISECONDS);
         }
     }
 }

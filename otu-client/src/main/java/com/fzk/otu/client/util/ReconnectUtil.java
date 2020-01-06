@@ -23,7 +23,8 @@ public class ReconnectUtil {
         int nextConnectDelay = 0;
         String imei = device.getImei();
         boolean on = RedisService.getOnStatus(imei);
-        if(on){
+        long msgSize = RedisService.getDelayMessageSize(imei);
+        if(on && msgSize>0 ){
             client.setReconnectCounter(new AtomicInteger(0));
             nextConnectDelay = ON_CONNECTION_INTERVAL;
         }else {

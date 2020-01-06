@@ -5,11 +5,12 @@ import lombok.Getter;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.fzk.stress.constants.Configuration.HASH_WHEEL_TICK;
+
 @Getter
 public class HashedWheelTimerUtil {
-    public static final int DELAY_TIME = 5000;
 
-    private HashedWheelTimer timer = new HashedWheelTimer(100, TimeUnit.MILLISECONDS);
+    private HashedWheelTimer timer = new HashedWheelTimer(HASH_WHEEL_TICK, TimeUnit.MILLISECONDS);
     private static class SingletonHolder {
         public final static HashedWheelTimerUtil instance = new HashedWheelTimerUtil();
     }

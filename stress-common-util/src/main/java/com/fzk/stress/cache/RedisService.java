@@ -85,6 +85,16 @@ public class RedisService {
         }
     }
 
+    public static long getDelayMessageSize(String imei){
+        Jedis jedis = JedisBuilder.instance().getJedis();
+        try {
+            String key = TopicCenter.buildDelayMessageKey(imei);
+            return jedis.llen(key);
+        } finally {
+            jedis.close();
+        }
+    }
+
     public static  boolean getOnStatus(String imei){
         String onKey = TopicCenter.buildOnKey(imei);
         String srcOn = get(onKey);

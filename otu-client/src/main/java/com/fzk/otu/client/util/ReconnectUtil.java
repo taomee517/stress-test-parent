@@ -1,7 +1,8 @@
 package com.fzk.otu.client.util;
 
-import com.fzk.otu.client.entity.MockDevice;
-import com.fzk.otu.client.server.MockClient;
+import com.fzk.otu.client.device.MockDevice;
+import com.fzk.otu.client.client.MockClient;
+import com.fzk.otu.client.task.ClientConnectTask;
 import com.fzk.stress.cache.RedisService;
 import com.fzk.stress.util.HashedWheelTimerUtil;
 import lombok.extern.slf4j.Slf4j;

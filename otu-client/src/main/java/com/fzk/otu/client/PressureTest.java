@@ -1,11 +1,12 @@
 package com.fzk.otu.client;
 
 
-import com.fzk.otu.client.entity.Ex223240Device;
-import com.fzk.otu.client.entity.MockDevice;
-import com.fzk.otu.client.server.MockClient;
-import com.fzk.otu.client.util.ClientConnectTask;
-import com.fzk.stress.entity.JedisConsumer;
+import com.fzk.otu.client.consumer.JedisExpireEventConsumer;
+import com.fzk.otu.client.device.Ex223240Device;
+import com.fzk.otu.client.device.MockDevice;
+import com.fzk.otu.client.client.MockClient;
+import com.fzk.otu.client.task.ClientConnectTask;
+import com.fzk.otu.client.consumer.JedisCarStatusConsumer;
 import com.fzk.stress.util.HashedWheelTimerUtil;
 import io.netty.util.HashedWheelTimer;
 import io.netty.util.TimerTask;
@@ -26,7 +27,8 @@ public class PressureTest {
         /**单一设备验证时用*/
         List<String> imeis = Arrays.asList("865886034429940");
 
-        new Thread(new JedisConsumer()).start();
+        new Thread(new JedisCarStatusConsumer()).start();
+        new Thread(new JedisExpireEventConsumer()).start();
         HashedWheelTimer hashedWheelTimer = HashedWheelTimerUtil.instance().getTimer();
         int delaySign = LOGIN_COUNT_ONE_TICK;
         int size = imeis.size();

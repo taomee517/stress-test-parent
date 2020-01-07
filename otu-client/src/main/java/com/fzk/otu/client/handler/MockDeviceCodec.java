@@ -1,7 +1,7 @@
 package com.fzk.otu.client.handler;
 
 
-import com.fzk.otu.client.entity.MockDevice;
+import com.fzk.otu.client.device.MockDevice;
 import com.fzk.stress.cache.RedisService;
 import com.fzk.stress.cache.TopicCenter;
 import com.fzk.stress.util.ChannelSession;
@@ -16,7 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.List;
 import java.util.Objects;
 
-import static com.fzk.stress.constants.Configuration.RESEND_MSG_COPY_TTL;
 import static com.fzk.stress.constants.Configuration.RESEND_MSG_INTERVAL;
 
 @Slf4j
@@ -31,8 +30,11 @@ public class MockDeviceCodec extends ByteToMessageCodec<String> {
         if(StringUtils.countMatches(msg,NEED_ACK_STATUS_SIGN)>0){
             String imei = ((MockDevice) ChannelSession.get(ctx.channel(), ChannelSession.DEVICE)).getImei();
             String resendKey = TopicCenter.buildCommonKey(TopicCenter.RESEND_TOPIC,imei);
+            //加上定位消息的时间戳，否则redis中存储的值会被覆盖
+            String timestamp = StringUtils.substringBetween(msg,NEED_ACK_STATUS_SIGN,",");
+            String resendKeyWithTime = StringUtils.joinWith("-", resendKey, timestamp);
             String resendCopyKey = TopicCenter.buildCommonKey(TopicCenter.RESEND_COPY_TOPIC,imei);
-            RedisService.setEx(resendKey,RESEND_MSG_INTERVAL);
+            RedisService.setEx(resendKeyWithTime,RESEND_MSG_INTERVAL);
             RedisService.lpush(resendCopyKey, msg);
         }
         byte[] bytes = msg.getBytes();
@@ -51,13 +53,19 @@ public class MockDeviceCodec extends ByteToMessageCodec<String> {
             }
             if (Objects.nonNull(msg)) {
                 out.add(msg);
+
+                //处理ack监听
                 if(StringUtils.countMatches(msg,STATUS_ACK_SIGN)>0) {
                     String imei = ((MockDevice) ChannelSession.get(ctx.channel(), ChannelSession.DEVICE)).getImei();
-                    log.info("收到状态回复，imei = {}",imei);
                     String resendKey = TopicCenter.buildCommonKey(TopicCenter.RESEND_TOPIC,imei);
-                    RedisService.delete(resendKey);
-                    String resendCopyKey = TopicCenter.buildCommonKey(TopicCenter.RESEND_COPY_TOPIC,imei);
-                    RedisService.pop(resendCopyKey);
+                    String pattern = StringUtils.join(resendKey,"*");
+                    String minTtlKey = RedisService.getAndDeleteMinTtlKey(pattern,RESEND_MSG_INTERVAL);
+                    if (StringUtils.isNotBlank(minTtlKey)) {
+                        String timestamp = StringUtils.substringAfterLast(minTtlKey, "-");
+                        log.info("收到状态回复并删除最小过期时间 key = {}", minTtlKey);
+                        String resendCopyKey = TopicCenter.buildCommonKey(TopicCenter.RESEND_COPY_TOPIC,imei);
+                        RedisService.queryAndDeleteMsgByTime(resendCopyKey,timestamp);
+                    }
                 }
             }
         }catch (Exception e){

@@ -1,7 +1,6 @@
 package com.fzk.otu.client.util;
 
-import com.fzk.otu.client.entity.MockDevice;
-import com.fzk.otu.client.entity.RequestType;
+import com.fzk.otu.client.device.MockDevice;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

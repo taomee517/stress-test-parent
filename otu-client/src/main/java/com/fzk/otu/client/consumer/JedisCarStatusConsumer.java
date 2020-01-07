@@ -1,4 +1,4 @@
-package com.fzk.stress.entity;
+package com.fzk.otu.client.consumer;
 
 import com.fzk.stress.cache.ChannelCache;
 import com.fzk.stress.cache.RedisService;
@@ -13,8 +13,12 @@ import java.util.Objects;
 import static com.fzk.stress.cache.TopicCenter.CAR_STATUS_TOPIC;
 import static com.fzk.stress.cache.TopicCenter.DELAY_MESSAGE_PREFIX;
 
+/**
+ * @author taomee517@qq.com
+ */
+
 @Slf4j
-public class JedisConsumer extends JedisPubSub implements Runnable{
+public class JedisCarStatusConsumer extends JedisPubSub implements Runnable{
 
     @Override
     public void run() {

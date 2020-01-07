@@ -1,4 +1,4 @@
-package com.fzk.otu.client.entity;
+package com.fzk.otu.client.device;
 
 import lombok.Data;
 

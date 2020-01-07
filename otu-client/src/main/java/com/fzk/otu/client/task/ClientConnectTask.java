@@ -1,8 +1,9 @@
-package com.fzk.otu.client.util;
+package com.fzk.otu.client.task;
 
-import com.fzk.otu.client.entity.MockDevice;
-import com.fzk.otu.client.entity.RequestType;
-import com.fzk.otu.client.server.MockClient;
+import com.fzk.otu.client.device.MockDevice;
+import com.fzk.otu.client.util.RequestType;
+import com.fzk.otu.client.client.MockClient;
+import com.fzk.otu.client.util.MessageBuilder;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.Timeout;
 import io.netty.util.TimerTask;

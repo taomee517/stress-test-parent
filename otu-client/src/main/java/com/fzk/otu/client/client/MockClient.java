@@ -1,6 +1,6 @@
-package com.fzk.otu.client.server;
+package com.fzk.otu.client.client;
 
-import com.fzk.otu.client.entity.MockDevice;
+import com.fzk.otu.client.device.MockDevice;
 import com.fzk.otu.client.handler.MockDeviceCodec;
 import com.fzk.otu.client.handler.MockDeviceHandler;
 import com.fzk.otu.client.util.ReconnectUtil;

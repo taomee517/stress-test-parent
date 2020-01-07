@@ -1,8 +1,8 @@
 package com.fzk.otu.client.handler;
 
-import com.fzk.otu.client.entity.MockDevice;
-import com.fzk.otu.client.entity.RequestType;
-import com.fzk.otu.client.server.MockClient;
+import com.fzk.otu.client.device.MockDevice;
+import com.fzk.otu.client.util.RequestType;
+import com.fzk.otu.client.client.MockClient;
 import com.fzk.otu.client.util.MessageBuilder;
 import com.fzk.otu.client.util.ReconnectUtil;
 import com.fzk.stress.cache.ChannelCache;
@@ -23,8 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.fzk.stress.cache.TopicCenter.DELAY_MESSAGE_PREFIX;
 
 @Data
 @Slf4j

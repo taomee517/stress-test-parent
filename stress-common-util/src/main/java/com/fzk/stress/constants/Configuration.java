@@ -33,10 +33,5 @@ public class Configuration {
 
     /**定位消息重发间隔时间（秒）*/
     public static final int RESEND_MSG_INTERVAL = 30;
-    /**须重发的定位消息缓存备份过期时间（秒）,
-     * 可以比间隔时间长一点
-     * 足够相关业务逻辑处理完成即可
-     */
-    public static final int RESEND_MSG_COPY_TTL = 40;
 
 }

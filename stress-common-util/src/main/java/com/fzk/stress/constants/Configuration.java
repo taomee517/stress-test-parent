@@ -23,13 +23,9 @@ public class Configuration {
     public static final int REDIS_PORT = 6379;
     public static final int REDIS_DATABASE = 2;
 
-
-    /**重新建连的时间间隔（秒）*/
-    public static final int RECONNECT_INTERVAL = 60;
-
     /**on状态时状态上报间隔时间（秒）*/
     public static final int ON_REPORT_INTERVAL = 5;
-    public static final int NONE_ON_REPORT_INTERVAL = 10;
+    public static final int NONE_ON_REPORT_INTERVAL = 150;
 
     /**定位消息重发间隔时间（秒）*/
     public static final int RESEND_MSG_INTERVAL = 30;

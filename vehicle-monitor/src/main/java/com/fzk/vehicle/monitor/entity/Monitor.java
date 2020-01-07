@@ -33,19 +33,19 @@ public class Monitor {
             StatusPublishUtil.handleParkingCarStatus(vehicle);
 
             /**测试验证定时器用*/
-            boolean flag = true;
+//            boolean flag = true;
 
-//            boolean flag = new Random().nextBoolean();
+            boolean flag = new Random().nextBoolean();
             log.info("ON分配，imei = {}, futureDrive = {}", imei, flag);
             if (flag) {
-//                //未来某个时刻启动并行驶一段轨迹
-//                int start = new Random().nextInt(20);
-//                //至少行驶5分钟
-//                int end = new Random().nextInt(60) + start + 5;
+                //未来某个时刻启动并行驶一段轨迹
+                int start = new Random().nextInt(20);
+                //至少行驶5分钟
+                int end = new Random().nextInt(60) + start + 5;
 
                 /**测试验证定时器用*/
-                int start = 1;
-                int end = 2;
+//                int start = 1;
+//                int end = 2;
 
                 log.info("车辆{}分钟后，进入驾驶状态，imei = {},start = {},end = {}", start, imei, start, end);
                 StatusPublishUtil.driveTheCarInFuture(vehicle, start, end);

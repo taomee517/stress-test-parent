@@ -1,10 +1,17 @@
 package com.fzk.stress.constants;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class Configuration {
 
 
     /**压测文件地址*/
     public static final String DEVICE_LIST_PATH = "E:\\private\\test\\pressure test\\DEMO.xlsx";
+
+    /**本地ip列表*/
+    public static final List<String> LOCAL_ADDRS = new ArrayList<>(Arrays.asList("127.0.0.1", "192.168.179.1"));
 
     /**Acceptor配置*/
     public static final String ACCEPTOR_IP = "127.0.0.1";
@@ -17,6 +24,8 @@ public class Configuration {
     public static final int HASH_WHEEL_TICK = 100;
     /**每个时间间隔上线的设备数*/
     public static final int LOGIN_COUNT_ONE_TICK = 8;
+    /**一个IP最大设备数*/
+    public static final int LOGIN_COUNT_ONE_IP = 25000;
 
     /**redis配置*/
     public static final String REDIS_IP = "127.0.0.1";

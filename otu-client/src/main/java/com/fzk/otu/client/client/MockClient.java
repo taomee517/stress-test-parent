@@ -14,6 +14,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+import java.net.InetSocketAddress;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -22,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Data
 public class MockClient {
     private MockDevice device;
+    private InetSocketAddress local;
     private String ip;
     private int port;
     private AtomicInteger reconnectCounter = new AtomicInteger(0);
@@ -31,7 +33,7 @@ public class MockClient {
     private static Bootstrap bootstrap = buildBootstrap();
 
 
-    public MockClient(MockDevice device, String ip, int port) {
+    public MockClient(MockDevice device, String ip, int port,InetSocketAddress local) {
         if (!Boolean.TRUE.equals(device.isAgFinish())) {
             device.setTag206Info(StringUtils.join(ip,",",Integer.toHexString(port)));
             device.setTag20fInfo(StringUtils.join(ip,",",Integer.toHexString(port)));
@@ -40,6 +42,7 @@ public class MockClient {
         this.device = device;
         this.ip = ip;
         this.port = port;
+        this.local = local;
     }
 
 
@@ -62,21 +65,24 @@ public class MockClient {
     public ChannelFuture connect() {
         ChannelFuture channelFuture = null;
         try {
-            channelFuture = bootstrap.connect(ip,port).addListeners(new ChannelFutureListener() {
+            bootstrap = bootstrap.localAddress(local);
+            channelFuture = bootstrap.connect(ip, port).addListeners(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
-                    if(future.isSuccess()){
-                        log.debug("设备imei={}与平台创建连接成功！",device.getImei());
+                    if (future.isSuccess()) {
+                        log.debug("设备imei={}与平台创建连接成功！", device.getImei());
                         Channel channel = future.channel();
-                        if(Objects.nonNull(channel)){
-                            ChannelSession.put(channel, ChannelSession.DEVICE,device);
-                            ChannelSession.put(channel,ChannelSession.CLIENT,MockClient.this);
+                        if (Objects.nonNull(channel)) {
+                            ChannelSession.put(channel, ChannelSession.DEVICE, device);
+                            ChannelSession.put(channel, ChannelSession.CLIENT, MockClient.this);
                         }
-                    }else {
+                    } else {
                         ReconnectUtil.buildReconnectTask(MockClient.this);
                     }
                 }
             }).sync();
+        }catch (Exception e){
+            log.error("创建连接时发生异常： e = {}, imei = {},", e, device.getImei());
         } finally {
             return channelFuture;
         }

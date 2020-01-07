@@ -97,7 +97,8 @@ public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
                     channel = ctx.channel();
                     ChannelSession.put(channel,ChannelSession.DEVICE,device);
                 }else{
-                    MockClient client = new MockClient(device,ip,port);
+                    MockClient originClient = (MockClient) ChannelSession.get(ctx.channel(),ChannelSession.CLIENT);
+                    MockClient client = new MockClient(device,ip,port,originClient.getLocal());
                     channel = client.connect().channel();
                 }
                 if (Objects.nonNull(channel)) {
@@ -168,7 +169,8 @@ public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
                         String ip = ipPortArray[0];
                         int port = Integer.valueOf(ipPortArray[1],16);
                         log.info("设备重启！");
-                        MockClient client = new MockClient(device,ip,port);
+                        MockClient originClient = (MockClient) ChannelSession.get(ctx.channel(),ChannelSession.CLIENT);
+                        MockClient client = new MockClient(device,ip,port,originClient.getLocal());
                         client.connect();
                     }
                 }else if(StringUtils.equals(RequestType.PUBLISH.getFunction(),function)){
@@ -287,12 +289,14 @@ public class MockDeviceHandler extends ChannelInboundHandlerAdapter {
 
         long resendSize = RedisService.llen(delayResendKey);
         for (int i=0;i<resendSize;i++) {
-            msg = RedisService.pop(delayResendKey);
-            log.info("积压重传消息 ↑↑↑:{},imei: {}",msg, imei);
-            channel.writeAndFlush(msg);
+            if (channel.isActive()) {
+                msg = RedisService.pop(delayResendKey);
+                log.info("积压重传消息 ↑↑↑:{},imei: {}",msg, imei);
+                channel.writeAndFlush(msg);
+            }
         }
 
-        while ((msg = RedisService.pop(delayKey)) != null){
+        while (channel.isActive() && (msg = RedisService.pop(delayKey)) != null){
             log.info("积压定位状态 ↑↑↑:{},imei: {}",msg, imei );
             channel.writeAndFlush(msg);
         }

@@ -32,7 +32,7 @@
                 <pattern>${PATTERN}</pattern>
             </PatternLayout>
             <!-- 按大小划分 -->
-            <SizeBasedTriggeringPolicy size="50 MB" />
+            <SizeBasedTriggeringPolicy size="20 MB" />
         </RollingFile>
     </Appenders>
     <Loggers>
@@ -44,7 +44,7 @@
         <Logger name="com.demo" level="INFO" />
         <Logger name="io.netty" level="INFO" />
         <Logger name="com.fzk" level="INFO" />
-        <Root level="DEBUG">
+        <Root level="INFO">
             <AppenderRef ref="console"></AppenderRef>
             <AppenderRef ref="error"></AppenderRef>
             <AppenderRef ref="rollingFile"></AppenderRef>

@@ -23,7 +23,7 @@
         <lombok-version>1.18.10</lombok-version>
         <poi-version>3.9</poi-version>
         <jedis-version>3.1.0</jedis-version>
-        <fastjson-version>1.2.62</fastjson-version>
+        <fastjson-version>1.2.83</fastjson-version>
         <guava-version>28.1-jre</guava-version>
         <commons-lang3-version>3.8.1</commons-lang3-version>
         <blacktea-common-version>2.4.5</blacktea-common-version>

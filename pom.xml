@@ -21,7 +21,7 @@
         <slf4j-version>1.7.28</slf4j-version>
         <netty-version>4.1.32.Final</netty-version>
         <lombok-version>1.18.10</lombok-version>
-        <poi-version>3.9</poi-version>
+        <poi-version>4.1.1</poi-version>
         <jedis-version>3.1.0</jedis-version>
         <fastjson-version>1.2.62</fastjson-version>
         <guava-version>28.1-jre</guava-version>
